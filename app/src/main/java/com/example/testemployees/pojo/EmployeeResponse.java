@@ -8,9 +8,9 @@ import java.util.List;
 public class EmployeeResponse {
     @SerializedName("response")
     @Expose
-    private static List<Employee> response;
+    private List<Employee> response;
 
-    public static List<Employee> getResponse() {
+    public List<Employee> getResponse() {
         return response;
     }
 

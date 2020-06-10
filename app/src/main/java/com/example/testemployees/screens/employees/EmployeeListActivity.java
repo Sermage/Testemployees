@@ -1,4 +1,4 @@
-package com.example.testemployees;
+package com.example.testemployees.screens.employees;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -6,9 +6,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.example.testemployees.R;
 import com.example.testemployees.adapters.EmployeeAdapter;
 import com.example.testemployees.api.ApiFactory;
 import com.example.testemployees.api.ApiService;
@@ -26,48 +26,41 @@ import io.reactivex.schedulers.Schedulers;
 
 
 
-public class MainActivity extends AppCompatActivity {
+public class EmployeeListActivity extends AppCompatActivity implements EmployeeListView {
 
     private RecyclerView recyclerViewMain;
     private EmployeeAdapter adapter;
-    private CompositeDisposable compositeDisposable;
-    private Disposable disposable;
+    private EmployeeListPresenter presenter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        presenter=new EmployeeListPresenter(this);
         recyclerViewMain = findViewById(R.id.recyclerViewMain);
         adapter = new EmployeeAdapter();
         recyclerViewMain.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewMain.setAdapter(adapter);
         adapter.setEmployees(new ArrayList<Employee>());
-        ApiFactory apiFactory = ApiFactory.getInstance();
-        ApiService apiService = apiFactory.getApiService();
-        compositeDisposable=new CompositeDisposable();
-        disposable= apiService.getEmployees()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<EmployeeResponse>() {
-                    @Override
-                    public void accept(EmployeeResponse employeeResponse) throws Exception {
-                        adapter.setEmployees(employeeResponse.getResponse());
-                    }
-                }, new Consumer<Throwable>() {
-                    @Override
-                    public void accept(Throwable throwable) throws Exception {
-                        Toast.makeText(MainActivity.this, throwable.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
-        compositeDisposable.add(disposable);
+        presenter.loadData();
 
     }
+    
 
     @Override
     protected void onDestroy() {
-        if(compositeDisposable!=null){
-            compositeDisposable.dispose();
-        }
+        presenter.disposeDisposable();
         super.onDestroy();
+    }
+
+    @Override
+    public void showData(List<Employee> employees) {
+        adapter.setEmployees(employees);
+    }
+
+    @Override
+    public void showError() {
+        Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
     }
 }
